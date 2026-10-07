@@ -1,0 +1,7 @@
+Versão do coletor: 2.0
+Período solicitado: 2019-01-01 a 2026-10-07
+Período armazenado: 2019-01-02 a 2026-10-06
+Preços armazenados: 9242 registros
+cdi_diario: 1951 registros armazenados
+selic_meta: 2837 registros armazenados
+ipca_mensal: 92 registros armazenados

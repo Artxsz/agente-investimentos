@@ -1,0 +1,49 @@
+name: Agente Financeiro Diario
+
+on:
+  schedule:
+    # 22:00 UTC corresponde a 19:00 no horário de Brasília (após fecho da B3 e liquidação de dados)
+    - cron: '0 22 * * 1-5'
+  workflow_dispatch: # Permite rodar manualmente clicando num botão no GitHub
+
+jobs:
+  executar-agente:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Instalar dependências
+      run: pip install -r requirements.txt
+
+    - name: 1. Atualizar Base de Dados (Coleta)
+      run: >-
+        python src/coletar_dados.py --tickers
+        BOVA11.SA EGIE3.SA GOLD11.SA HASH11.SA HGLG11.SA IMAB11.SA
+        ITUB4.SA IVVB11.SA KNIP11.SA MXRF11.SA PETR4.SA VALE3.SA
+
+    - name: 2. Processar Indicadores Técnicos
+      run: python src/gerar_indicadores.py
+
+    - name: 3. Treinar o modelo diário
+      run: python src/modelo_preditivo.py --acao treinar --ticker PETR4.SA
+
+    - name: 4. Executar Pesquisa Macro e Otimização
+      run: python src/agente.py
+
+    - name: 5. Salvar histórico e previsões no Repositório
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add -f dados/mercado.db
+        git commit -m "Agente: atualização diária da base de dados e previsões" || echo "Sem mudanças para salvar."
+        git push
